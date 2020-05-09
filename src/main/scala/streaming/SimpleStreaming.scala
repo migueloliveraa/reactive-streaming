@@ -77,14 +77,22 @@ object SimpleStreaming extends ExtraStreamOps with SimpleStreamingInterface {
    * Recover [[IllegalStateException]] values to a -1 value
    */
   def recoverSingleElement(ints: Source[Int, NotUsed]): Source[Int, NotUsed] =
-    ???
+    {
+      ints.recover{
+        case _:IllegalStateException => -1
+      }
+    }
 
   /**
    * Recover [[IllegalStateException]] values to the provided fallback Source
    *
    */
   def recoverToAlternateSource(ints: Source[Int, NotUsed], fallback: Source[Int, NotUsed]): Source[Int, NotUsed] =
-    ???
+    {
+      ints.recoverWithRetries (-1, {
+        case _:IllegalStateException => fallback
+      })
+    }
 
   // working with rate
 
@@ -102,7 +110,9 @@ object SimpleStreaming extends ExtraStreamOps with SimpleStreamingInterface {
    * If you'd like to see the exact events happening you can call `.logAllEvents` on the Flow you are returning here
    */
   def sumUntilBackpressureGoesAway: Flow[Int, Int, _] =
-    ???
+    {
+      Flow[Int].conflate((acc,x) =>acc+x)
+    }
 
   /**
    * A faster downstream wants to consume elements, yet the upstream is slow at providing them.
@@ -115,6 +125,10 @@ object SimpleStreaming extends ExtraStreamOps with SimpleStreamingInterface {
    * See also [[Iterator.continually]]
    */
   def keepRepeatingLastObservedValue: Flow[Int, Int, _] =
-    ???
+    {
+      Flow[Int].extrapolate((x:Int) =>{
+        Iterator.continually(x)
+      })
+    }
 
 }
